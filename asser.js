@@ -17,9 +17,7 @@ let score = 0;
 let questions = [];
 
 // User check
-if (!window.userName) {
-  alert("User not logged in!");
-}
+
 
 // Score from localStorage
 let scores = JSON.parse(localStorage.getItem("scores")||"{}");
