@@ -1,0 +1,144 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Questions</title>
+<link href="p.css" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
+</head>
+<body class="asso">
+
+<div class="g8">
+  <a href="index.html" class="btn">home</a>
+  <a href="p3.html" class="btn">quiz</a>
+  <button class="btn" onclick="logout()">logout</button>
+</div>
+
+<div class="add-box" id="addForm">
+  <h3>Add a Question</h3>
+  <label>Category:</label>
+  <select id="category">
+    <option value="General">General</option>
+    <option value="Math">Math</option>
+    <option value="Science">Science</option>
+    <option value="History">History</option>
+    <option value="English">English</option>
+  </select>
+
+  <label>Difficulty:</label>
+  <select id="difficulty">
+    <option value="Easy">Easy</option>
+    <option value="Medium">Medium</option>
+    <option value="Hard">Hard</option>
+  </select>
+
+  <label>Question:</label>
+  <input type="text" id="qText">
+
+  <label>Option 1:</label><input type="text" id="opt1">
+  <label>Option 2:</label><input type="text" id="opt2">
+  <label>Option 3:</label><input type="text" id="opt3">
+  <label>Option 4:</label><input type="text" id="opt4">
+
+  <label>Correct Option (1-4):</label>
+  <select id="correct">
+    <option value="0">1</option>
+    <option value="1">2</option>
+    <option value="2">3</option>
+    <option value="3">4</option>
+  </select>
+
+  <label><input type="checkbox" id="agree"> I agree that the content is appropriate</label>
+
+  <button class="btn" onclick="previewQuestion()">Preview</button>
+  <button class="btn" onclick="saveQuestion()">Save Question</button>
+</div>
+
+<script>
+// Firebase init
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+window.db = db;
+
+function logout() {
+  localStorage.removeItem("loginInfo");
+  window.location.href = "p2.html";
+}
+
+async function saveQuestion() {
+  const category = document.getElementById("category").value;
+  const difficulty = document.getElementById("difficulty").value;
+  const qText = document.getElementById("qText").value.trim();
+  const opts = [
+    document.getElementById("opt1").value.trim(),
+    document.getElementById("opt2").value.trim(),
+    document.getElementById("opt3").value.trim(),
+    document.getElementById("opt4").value.trim()
+  ];
+  const correct = parseInt(document.getElementById("correct").value);
+  const agree = document.getElementById("agree").checked;
+
+  if (!agree) {
+    alert("You must agree that the content is appropriate!");
+    return;
+  }
+
+  if (!qText.endsWith("?")) {
+    alert("Question must end with a question mark.");
+    return;
+  }
+
+  const whWords = ["who","what","when","where","why","how"];
+  const containsWH = whWords.some(w => qText.toLowerCase().includes(w));
+  if (!containsWH) {
+    alert("Question must contain at least one W.H. word: who, what, when, where, why, or how.");
+    return;
+  }
+
+  const question = {
+    category,
+    difficulty,
+    text: qText,
+    options: opts,
+    correct
+  };
+
+  try {
+    if (window.db) {
+      await window.db.collection("questions").add(question);
+      alert("Question saved globally!");
+    }
+  } catch(e) {
+    console.warn("Firebase error, saving locally", e);
+    const localQ = JSON.parse(localStorage.getItem("questions")||"[]");
+    localQ.push(question);
+    localStorage.setItem("questions", JSON.stringify(localQ));
+    alert("Question saved locally!");
+  }
+
+  // Reset form
+  document.getElementById("qText").value="";
+  document.getElementById("opt1").value="";
+  document.getElementById("opt2").value="";
+  document.getElementById("opt3").value="";
+  document.getElementById("opt4").value="";
+  document.getElementById("correct").value="0";
+  document.getElementById("agree").checked=false;
+}
+
+function previewQuestion() {
+  const qText = document.getElementById("qText").value.trim();
+  if (!qText) { alert("Enter a question first!"); return; }
+  alert("Preview: " + qText);
+}
+</script>
+</body>
+</html>
